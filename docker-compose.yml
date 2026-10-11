@@ -12,6 +12,11 @@ services:
     environment:
       - TZ=Africa/Tunis
     mem_limit: 128m
+    # Réseau de Homepage : son siteMonitor joint le jeu en interne (http://colonie:8000),
+    # sans publier de port supplémentaire
+    networks:
+      - default
+      - homepage
     labels:
       # Image construite localement : aucun registre à surveiller pour WUD
       - wud.watch=false
@@ -30,3 +35,8 @@ services:
     volumes:
       - ./app:/srv/app:ro
       - ./tests:/srv/tests:ro
+
+networks:
+  homepage:
+    external: true
+    name: homepage_default

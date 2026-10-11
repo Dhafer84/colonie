@@ -35,7 +35,8 @@ Tous les chiffres sont dans `app/regles.py` (taux par heure, durées en secondes
 ## Réseau et intégrations
 - Port **8085** lié à `127.0.0.1` uniquement — **jamais sur 0.0.0.0**.
 - Accès : **Tailscale Serve** HTTPS port **8086** → `https://serveur.<tailnet>.ts.net:8086` (tailnet uniquement ; nom exact : `tailscale serve status`).
-- Homepage : tuile dans `~/homepage/config/services.yaml` (groupe « Loisirs »).
+- Homepage : tuile dans `~/homepage/config/services.yaml` (groupe « Loisirs », copie de secours `services.yaml.avant-colonie`) ; `siteMonitor: http://colonie:8000/api/sante` via le réseau Docker `homepage_default` (externe dans le compose : si Homepage et son réseau disparaissent, retirer ces lignes sinon `colonie` ne démarre plus).
+- Sauvegarde : cron de dhafer, tous les jours à 4 h 17 (`crontab -l`) → `data/sauvegardes/` (14 gardées), journal `data/sauvegardes.log`.
 - WUD : `wud.watch=false` (image locale, pas de registre) ; image de base mise à jour par rebuild avec `--pull`.
 
 ## Commandes utiles (depuis `~/homelab/colonie`)
@@ -77,8 +78,7 @@ data/            colonie.db — non versionné
   - Rapport « Pendant ton absence » si plus de 10 min se sont écoulées depuis la dernière requête.
   - Service worker « réseau d'abord » (l'API n'est jamais mise en cache) : changer `VERSION` dans `sw.js` à chaque modification de l'interface. Le service worker exige HTTPS (étape 4) ou localhost.
   - Icônes PNG générées depuis `icones/icone.svg` (rendu Chromium).
-- [x] Étape 6 — Export/import, sauvegarde de la base (74 tests) — côté code
-  - Reste à faire sur le serveur : tuile Homepage et tâche cron de sauvegarde (voir `MISE-EN-SERVICE.md`). WUD : déjà réglé par les labels du compose.
+- [x] Étape 6 — Export/import, sauvegarde de la base (74 tests), tuile Homepage (siteMonitor vert), cron de sauvegarde installé et testé. WUD : réglé par les labels du compose.
 - [ ] Étape 7 — Enrichissements (événements, recherche, notifications…)
 
 ## Façon de travailler

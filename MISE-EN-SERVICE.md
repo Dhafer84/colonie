@@ -60,12 +60,14 @@ Ajouter dans `~/homepage/config/services.yaml`, groupe « Loisirs » :
         icon: mdi-rocket-launch
         href: https://serveur.<tailnet>.ts.net:8086
         description: Jeu de gestion idle
-        siteMonitor: https://serveur.<tailnet>.ts.net:8086/api/sante
-        container: colonie
+        siteMonitor: http://colonie:8000/api/sante
 ```
 
-`container: colonie` n'affiche l'état que si Homepage a accès à Docker
-(`docker.yaml`) ; sinon, supprimer la ligne. Homepage relit le fichier tout seul.
+Le conteneur Homepage ne résout pas les noms `ts.net` : le `siteMonitor` passe
+donc par le réseau Docker de Homepage (`homepage_default`), auquel `colonie` est
+rattaché dans `docker-compose.yml`. Aucun port supplémentaire n'est publié.
+Pas de ligne `container:` tant que Homepage n'a pas accès à Docker (`docker.yaml`).
+Homepage relit le fichier tout seul.
 
 WUD : rien à faire, `wud.watch=false` est déjà dans `docker-compose.yml`
 (image locale ; l'image de base se met à jour avec `docker compose build --pull`).
