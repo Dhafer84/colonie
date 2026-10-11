@@ -51,7 +51,7 @@ app/main.py      routes FastAPI
 app/moteur.py    simulation pure : etat_initial, calculer_taux, simuler, demarrer_construction
 app/regles.py    données d'équilibrage et objectifs
 app/stockage.py  SQLite : table partie (état JSON, 1 ligne) + journal des événements
-app/static/      interface (à venir)
+app/static/      interface : index.html, style.css, app.js, sw.js, manifest.webmanifest, icones/
 tests/           pytest (moteur, API + stockage)
 Dockerfile       étapes base → test (pytest) → prod (cible par défaut)
 data/            colonie.db — non versionné
@@ -66,7 +66,11 @@ data/            colonie.db — non versionné
   - Un verrou + `BEGIN IMMEDIATE` sérialisent « charger → simuler → sauvegarder » ; une action refusée annule tout (rollback).
   - Avant le premier `up` : `mkdir -p data` (sinon Docker crée `data/` en root et l'utilisateur UID 1000 ne peut pas écrire la base).
 - [ ] Étape 4 — HTTPS via Tailscale Serve (8086)
-- [ ] Étape 5 — Interface mobile + PWA
+- [x] Étape 5 — Interface mobile + PWA (57 tests)
+  - L'interface extrapole les ressources chaque seconde avec les taux/h et redemande `/api/etat` toutes les 30 s, à la fin d'un chantier, quand une ressource va s'épuiser et au retour sur l'onglet.
+  - Rapport « Pendant ton absence » si plus de 10 min se sont écoulées depuis la dernière requête.
+  - Service worker « réseau d'abord » (l'API n'est jamais mise en cache) : changer `VERSION` dans `sw.js` à chaque modification de l'interface. Le service worker exige HTTPS (étape 4) ou localhost.
+  - Icônes PNG générées depuis `icones/icone.svg` (rendu Chromium).
 - [ ] Étape 6 — Homepage, WUD, sauvegarde/export/import
 - [ ] Étape 7 — Enrichissements (événements, recherche, notifications…)
 

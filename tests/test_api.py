@@ -201,3 +201,28 @@ def test_requetes_simultanees_serialisees(client):
         f.join()
     with S.transaction() as conn:
         assert S.charger(conn) == {"compteur": 10}
+
+
+# --- Interface ---------------------------------------------------------------
+
+def test_interface_servie(client):
+    reponse = client.get("/")
+    assert reponse.status_code == 200
+    assert "Colonie spatiale" in reponse.text
+
+
+@pytest.mark.parametrize("chemin, type_", [
+    ("/app.js", "javascript"),
+    ("/style.css", "text/css"),
+    ("/sw.js", "javascript"),
+    ("/manifest.webmanifest", "application/manifest+json"),
+    ("/icones/icone-192.png", "image/png"),
+])
+def test_fichiers_de_la_pwa(client, chemin, type_):
+    reponse = client.get(chemin)
+    assert reponse.status_code == 200
+    assert type_ in reponse.headers["content-type"]
+
+
+def test_route_api_inconnue(client):
+    assert client.get("/api/inexistante").status_code == 404

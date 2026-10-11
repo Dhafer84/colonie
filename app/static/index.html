@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Colonie spatiale</title>
+  <meta name="description" content="Jeu de gestion d'une colonie spatiale, qui continue de vivre en ton absence.">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Colonie">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icones/icone.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="entete">
+    <h1>Colonie spatiale</h1>
+    <button id="bouton-menu" class="bouton-icone" type="button" aria-label="Menu" aria-haspopup="dialog">⋮</button>
+  </header>
+
+  <div id="connexion" class="bandeau bandeau-erreur" hidden></div>
+
+  <main id="contenu" aria-busy="true">
+    <p class="chargement">Liaison avec la colonie…</p>
+  </main>
+
+  <template id="modele-contenu">
+    <section id="objectif" class="carte carte-objectif" aria-label="Objectif"></section>
+    <div id="alertes"></div>
+
+    <section aria-labelledby="titre-ressources">
+      <h2 id="titre-ressources" class="visuellement-cache">Ressources</h2>
+      <div id="ressources" class="grille-ressources"></div>
+    </section>
+
+    <section id="chantier" class="carte carte-chantier" aria-label="Chantier en cours" hidden></section>
+
+    <section aria-labelledby="titre-batiments">
+      <h2 id="titre-batiments">Bâtiments</h2>
+      <div id="batiments" class="liste-batiments"></div>
+    </section>
+
+    <section aria-labelledby="titre-journal">
+      <h2 id="titre-journal">Journal de bord</h2>
+      <ul id="journal" class="journal"></ul>
+    </section>
+  </template>
+
+  <dialog id="rapport" class="fenetre" aria-labelledby="titre-rapport">
+    <h2 id="titre-rapport">Pendant ton absence</h2>
+    <div id="rapport-contenu"></div>
+    <form method="dialog"><button class="bouton bouton-principal">Reprendre</button></form>
+  </dialog>
+
+  <dialog id="menu" class="fenetre" aria-labelledby="titre-menu">
+    <h2 id="titre-menu">Menu</h2>
+    <div class="actions-menu">
+      <button id="bouton-nouvelle" class="bouton bouton-danger" type="button">🚀 Nouvelle partie</button>
+    </div>
+    <p class="aide">La colonie continue de vivre quand l'application est fermée (jusqu'à 7 jours, ensuite elle hiberne).</p>
+    <form method="dialog"><button class="bouton">Fermer</button></form>
+  </dialog>
+
+  <div id="notification" class="notification" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

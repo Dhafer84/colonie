@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="ciel" cx="70%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#22336b"/>
+      <stop offset="1" stop-color="#0b1020"/>
+    </radialGradient>
+    <linearGradient id="planete" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb070"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#ciel)"/>
+  <g fill="#e6e9f5">
+    <circle cx="110" cy="110" r="5"/><circle cx="400" cy="90" r="4"/>
+    <circle cx="430" cy="210" r="3"/><circle cx="80" cy="250" r="3"/><circle cx="200" cy="70" r="3"/>
+  </g>
+  <circle cx="256" cy="560" r="300" fill="url(#planete)"/>
+  <path d="M176 318 a80 80 0 0 1 160 0 z" fill="#9fd0ff" fill-opacity=".85" stroke="#e6e9f5" stroke-width="8"/>
+  <path d="M256 238 v80 M196 278 h120" stroke="#e6e9f5" stroke-width="5" stroke-opacity=".7"/>
+  <rect x="340" y="282" width="70" height="36" rx="6" fill="#3d7bff" stroke="#e6e9f5" stroke-width="6"/>
+  <path d="M375 282 v-30" stroke="#e6e9f5" stroke-width="6"/>
+  <circle cx="375" cy="246" r="9" fill="#ffd166"/>
+</svg>

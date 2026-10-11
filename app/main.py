@@ -4,9 +4,12 @@ Aucune boucle serveur : chaque requête charge l'état, le simule jusqu'à
 « maintenant », applique l'action éventuelle puis sauvegarde.
 """
 
+import mimetypes
 import time
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app import moteur as M
@@ -19,6 +22,10 @@ app = FastAPI(title="Colonie spatiale", docs_url=None, redoc_url=None)
 horloge = time.time
 
 JOURNAL_AFFICHE = 30
+STATIQUE = Path(__file__).parent / "static"
+
+# Pas toujours connu du module mimetypes selon la version de Python
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 
 class DemandeConstruction(BaseModel):
@@ -146,3 +153,7 @@ def nouvelle_partie(demande: DemandeNouvellePartie) -> dict:
         etat = M.etat_initial(maintenant)
         S.sauvegarder(conn, etat)
     return _vue(etat, None, [], maintenant)
+
+
+# Interface (PWA) : montée en dernier pour ne pas masquer les routes /api
+app.mount("/", StaticFiles(directory=STATIQUE, html=True), name="interface")
