@@ -56,6 +56,7 @@ app/stockage.py  SQLite : table partie (état JSON, 1 ligne) + journal des évé
 app/sauvegarde.py  copie cohérente de la base dans data/sauvegardes/ (14 gardées), lancée par cron sur l'hôte
 app/static/      interface : index.html, style.css, app.js, sw.js, manifest.webmanifest, icones/
 tests/           pytest (moteur, API + stockage)
+MISE-EN-SERVICE.md  actions à faire sur le serveur (Tailscale Serve, Homepage, cron, restauration)
 Dockerfile       étapes base → test (pytest) → prod (cible par défaut)
 data/            colonie.db — non versionné
 ```
