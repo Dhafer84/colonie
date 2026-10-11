@@ -60,6 +60,7 @@ data/            colonie.db — non versionné
 - [ ] Étape 7 — Enrichissements (événements, recherche, notifications…)
 
 ## Façon de travailler
-- Petites étapes testables, un commit par étape (identité `Dhafer84`).
+- Dépôt : https://github.com/Dhafer84/colonie (remote `origin` en SSH, branche `main`).
+- Petites étapes testables, un commit par étape (identité `Dhafer84`), poussé sur GitHub.
 - Expliquer chaque commande avant de la lancer ; demander avant toute modification du système hôte.
 - Mettre à jour la section « État d'avancement » à chaque étape.
