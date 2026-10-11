@@ -17,3 +17,16 @@ services:
       - wud.watch=false
       - wud.display.name=Colonie spatiale
       - wud.display.icon=mdi:rocket-launch
+
+  # Tests uniquement : `docker compose run --rm tests` (jamais lancé par `up`)
+  tests:
+    build:
+      context: .
+      target: test
+    image: colonie:tests
+    profiles: ["tests"]
+    network_mode: none
+    # Code monté en lecture seule : pas besoin de reconstruire après une modification
+    volumes:
+      - ./app:/srv/app:ro
+      - ./tests:/srv/tests:ro

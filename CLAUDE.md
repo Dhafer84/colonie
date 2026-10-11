@@ -4,12 +4,16 @@ Jeu de gestion « idle » mono-joueur, auto-hébergé sur le serveur maison (voi
 Langue : **français** partout (interface, code, commentaires, docs, commits).
 
 ## Règles du jeu (v1)
-- Une colonie, un joueur. Ressources : **oxygène, énergie, nourriture**, plus **matériaux** (construction) et **colons**.
-- Bâtiments avec niveaux : panneau solaire, générateur d'O₂, serre, mine, habitat, entrepôt. Améliorer = coût ×~1,6, effet ×~1,5.
-- Construction en temps réel, un seul chantier à la fois.
-- Pénuries sans game over : énergie à 0 → efficacité réduite ; nourriture à 0 → production −50 % et départs lents ; O₂ à 0 → départs plus rapides. Jamais moins de 2 colons.
-- Idle : la progression est rattrapée à partir du temps écoulé (plafond 7 jours), avec un résumé « Pendant ton absence ».
-- Objectifs : chaîne de 5 objectifs progressifs récompensés en matériaux (définis dans `app/regles.py`).
+Tous les chiffres sont dans `app/regles.py` (taux par heure, durées en secondes).
+- Une colonie, un joueur. Ressources : **oxygène, énergie, nourriture, matériaux** (stock plafonné : 300 + 250 par niveau d'entrepôt), et **colons**.
+- Bâtiments : panneau solaire, générateur d'O₂, serre, mine (débloquée à 6 colons), habitat (2 + 4 places par niveau), entrepôt. Niveau n : coût ×1,6ⁿ⁻¹, durée ×2,5ⁿ⁻¹, production ×1,5ⁿ⁻¹, conso d'énergie ×1,3ⁿ⁻¹. Niveau max 10.
+- **Postes** : générateur d'O₂, serre et mine demandent 1 colon par niveau ; s'il en manque, ils produisent au prorata.
+- Colons : consomment 2 O₂ + 1,5 nourriture /h ; +0,25 colon/h s'il y a de la place et ni famine ni asphyxie.
+- Construction en temps réel, un seul chantier à la fois, payée en matériaux. +3 matériaux/h de récupération (évite tout blocage).
+- Pénuries sans game over : énergie insuffisante → les consommateurs tournent au prorata ; nourriture à 0 → production −50 % et 4 %/h des colons partent ; O₂ à 0 → 10 %/h partent. Jamais moins de 2 colons.
+- La production ne dépasse pas la capacité de stockage, mais un excédent (récompense) n'est pas détruit.
+- Idle : rattrapage par pas de 60 s depuis `derniere_maj`, plafonné à 7 jours (« hibernation » ; un chantier en cours se termine quand même).
+- Objectifs (un actif à la fois) : serre (+50), panneau solaire niv. 2 (+100), mine (+150), 10 colons (+300), 24 h sans pénurie comptées à partir de l'activation (+500).
 
 ## Architecture
 - **FastAPI + uvicorn** (1 worker), Python 3.12, image `python:3.12-slim`, utilisateur non-root UID 1000.
@@ -28,6 +32,7 @@ Langue : **français** partout (interface, code, commentaires, docs, commits).
 docker compose up -d --build              # construire et lancer
 docker compose logs -f colonie            # journaux
 docker compose build --pull && docker compose up -d   # mettre à jour l'image de base
+docker compose run --rm tests             # tests pytest (dans un conteneur, sans réseau)
 curl -s http://127.0.0.1:8085/api/sante   # santé
 docker stats --no-stream colonie          # consommation RAM/CPU
 ```
@@ -35,17 +40,19 @@ docker stats --no-stream colonie          # consommation RAM/CPU
 ## Arborescence
 ```
 app/main.py      routes FastAPI
-app/moteur.py    simulation pure (à venir)
-app/regles.py    données d'équilibrage et objectifs (à venir)
+app/moteur.py    simulation pure : etat_initial, calculer_taux, simuler, demarrer_construction
+app/regles.py    données d'équilibrage et objectifs
 app/stockage.py  SQLite (à venir)
 app/static/      interface (à venir)
-tests/           pytest (à venir)
+tests/           pytest (moteur)
+Dockerfile       étapes base → test (pytest) → prod (cible par défaut)
 data/            colonie.db — non versionné
 ```
 
 ## État d'avancement
 - [x] Étape 1 — Initialisation : git, squelette FastAPI (`/api/sante`), Dockerfile, compose
-- [ ] Étape 2 — Moteur de simulation + objectifs + tests
+- [x] Étape 2 — Moteur de simulation + objectifs + tests (32 tests)
+  - Équilibrage à affiner en jouant : sur une partie scriptée, aucune pénurie en 48 h (probablement trop facile), matériaux rares avant 24 h puis 700+ après les récompenses.
 - [ ] Étape 3 — API + persistance SQLite
 - [ ] Étape 4 — HTTPS via Tailscale Serve (8086)
 - [ ] Étape 5 — Interface mobile + PWA
