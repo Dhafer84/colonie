@@ -23,6 +23,12 @@ Tous les chiffres sont dans `app/regles.py` (taux par heure, durées en secondes
 - **SQLite** (`sqlite3` standard, mode journal classique, pas WAL) : un seul fichier `data/colonie.db`.
 - Frontend HTML/CSS/JS vanilla sans build, servi par FastAPI ; PWA (manifest + service worker).
 
+## API
+- `GET /api/etat` : simule jusqu'à maintenant, sauvegarde, renvoie tout ce qu'il faut à l'interface (ressources, taux/h, capacités, bâtiments avec coût/durée/effets du prochain niveau, chantier, objectif, pénuries, `rapport` du rattrapage, 30 derniers événements du journal).
+- `POST /api/construire` `{"batiment": "serre"}` : 400 avec message en français si l'action est refusée.
+- `POST /api/nouvelle-partie` `{"confirmer": true}` : efface la partie et le journal.
+- Toutes les réponses `/api/*` sont en `Cache-Control: no-store`.
+
 ## Réseau et intégrations
 - Port **8085** lié à `127.0.0.1` uniquement — **jamais sur 0.0.0.0**.
 - Accès : **Tailscale Serve** HTTPS port **8086** → `https://serveur.<tailnet>.ts.net:8086` (tailnet uniquement).
@@ -44,9 +50,9 @@ docker stats --no-stream colonie          # consommation RAM/CPU
 app/main.py      routes FastAPI
 app/moteur.py    simulation pure : etat_initial, calculer_taux, simuler, demarrer_construction
 app/regles.py    données d'équilibrage et objectifs
-app/stockage.py  SQLite (à venir)
+app/stockage.py  SQLite : table partie (état JSON, 1 ligne) + journal des événements
 app/static/      interface (à venir)
-tests/           pytest (moteur)
+tests/           pytest (moteur, API + stockage)
 Dockerfile       étapes base → test (pytest) → prod (cible par défaut)
 data/            colonie.db — non versionné
 ```
@@ -55,7 +61,10 @@ data/            colonie.db — non versionné
 - [x] Étape 1 — Initialisation : git, squelette FastAPI (`/api/sante`), Dockerfile, compose
 - [x] Étape 2 — Moteur de simulation + objectifs + tests (32 tests)
   - Équilibrage à affiner en jouant : sur une partie scriptée, aucune pénurie en 48 h (probablement trop facile), matériaux rares avant 24 h puis 700+ après les récompenses.
-- [ ] Étape 3 — API + persistance SQLite
+- [x] Étape 3 — API + persistance SQLite (50 tests)
+  - Routes : `GET /api/etat`, `POST /api/construire {batiment}`, `POST /api/nouvelle-partie {confirmer: true}` ; `/api/sante` vérifie aussi la base (503 sinon).
+  - Un verrou + `BEGIN IMMEDIATE` sérialisent « charger → simuler → sauvegarder » ; une action refusée annule tout (rollback).
+  - Avant le premier `up` : `mkdir -p data` (sinon Docker crée `data/` en root et l'utilisateur UID 1000 ne peut pas écrire la base).
 - [ ] Étape 4 — HTTPS via Tailscale Serve (8086)
 - [ ] Étape 5 — Interface mobile + PWA
 - [ ] Étape 6 — Homepage, WUD, sauvegarde/export/import

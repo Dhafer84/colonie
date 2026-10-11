@@ -308,3 +308,24 @@ def demarrer_construction(etat: dict, batiment: str, maintenant: float) -> dict:
         "fin": maintenant + duree(batiment, niveau),
     }
     return etat
+
+
+# --- Affichage ---------------------------------------------------------------
+
+def effets(batiment: str, niveau: int) -> dict:
+    """Effets nominaux d'un bâtiment à `niveau` (à plein régime, sans pénurie)."""
+    spec = R.BATIMENTS[batiment]
+    if niveau <= 0:
+        return {"produit": {}, "consomme": {}, "postes": 0}
+    f_prod = R.FACTEUR_PRODUCTION ** (niveau - 1)
+    f_conso = R.FACTEUR_CONSOMMATION ** (niveau - 1)
+    resultat = {
+        "produit": {r: v * f_prod for r, v in spec["produit"].items()},
+        "consomme": {r: v * f_conso for r, v in spec["consomme"].items()},
+        "postes": spec["postes"] * niveau,
+    }
+    if batiment == "habitat":
+        resultat["places"] = R.COLONS_PAR_HABITAT * niveau
+    if batiment == "entrepot":
+        resultat["stockage"] = R.STOCKAGE_PAR_ENTREPOT * niveau
+    return resultat
