@@ -1,6 +1,8 @@
 # CLAUDE.md — Colonie spatiale
 
-Jeu de gestion « idle » mono-joueur, auto-hébergé sur le serveur maison (voir `~/homelab/CLAUDE.md`).
+Jeu de gestion « idle » mono-joueur, auto-hébergé sur le serveur maison.
+
+Contexte du serveur (copie de `~/homelab/CLAUDE.md`, à resynchroniser si l'original change) :
 Langue : **français** partout (interface, code, commentaires, docs, commits).
 
 ## Règles du jeu (v1)
