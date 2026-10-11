@@ -4,7 +4,7 @@
 // dernière version, hors ligne on affiche la copie en cache. L'API n'est jamais
 // mise en cache (le serveur fait foi). Changer VERSION force le renouvellement.
 
-const VERSION = "colonie-v1";
+const VERSION = "colonie-v2";
 const COQUILLE = [
   "/",
   "/style.css",

@@ -4,11 +4,13 @@ Aucune boucle serveur : chaque requête charge l'état, le simule jusqu'à
 « maintenant », applique l'action éventuelle puis sauvegarde.
 """
 
+import json
 import mimetypes
 import time
 from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import Body, FastAPI, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -153,6 +155,67 @@ def nouvelle_partie(demande: DemandeNouvellePartie) -> dict:
         etat = M.etat_initial(maintenant)
         S.sauvegarder(conn, etat)
     return _vue(etat, None, [], maintenant)
+
+
+FORMAT_EXPORT = "colonie-spatiale"
+
+
+@app.get("/api/export")
+def exporter() -> Response:
+    """Fichier JSON téléchargeable : l'état (mis à jour) et le journal."""
+    maintenant = horloge()
+    with S.transaction() as conn:
+        etat, _ = _mettre_a_jour(conn, maintenant)
+        S.sauvegarder(conn, etat)
+        journal = S.lire_journal(conn, S.JOURNAL_MAX)
+    contenu = {"format": FORMAT_EXPORT, "exporte_le": maintenant, "etat": etat, "journal": journal}
+    nom = time.strftime("colonie-%Y-%m-%d-%Hh%M.json", time.localtime(maintenant))
+    return Response(
+        content=json.dumps(contenu, ensure_ascii=False, indent=1),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{nom}"'},
+    )
+
+
+def _journal_importe(journal) -> list[dict]:
+    if not isinstance(journal, list):
+        raise M.ErreurJeu("Sauvegarde invalide : journal incorrect.")
+    evenements = []
+    for ev in journal[: S.JOURNAL_MAX]:
+        if (not isinstance(ev, dict) or not isinstance(ev.get("t"), (int, float))
+                or not isinstance(ev.get("type"), str) or not isinstance(ev.get("message"), str)):
+            raise M.ErreurJeu("Sauvegarde invalide : journal incorrect.")
+        evenements.append(ev)
+    # L'export va du plus récent au plus ancien : on réinsère dans l'ordre chronologique
+    return sorted(reversed(evenements), key=lambda ev: ev["t"])
+
+
+@app.post("/api/import")
+def importer(donnees: dict[str, Any] = Body(...)) -> dict:
+    """Remplace la partie par un export. Le temps écoulé depuis l'export est
+    rattrapé comme une absence normale (plafonné à 7 jours)."""
+    maintenant = horloge()
+    try:
+        if donnees.get("format") != FORMAT_EXPORT:
+            raise M.ErreurJeu("Ce fichier n'est pas un export de la Colonie spatiale.")
+        etat = donnees.get("etat")
+        M.valider_etat(etat)
+        if etat["derniere_maj"] > maintenant + 60:
+            raise M.ErreurJeu("Sauvegarde invalide : elle est datée du futur.")
+        journal = _journal_importe(donnees.get("journal", []))
+    except M.ErreurJeu as erreur:
+        raise HTTPException(status_code=400, detail=str(erreur)) from None
+
+    with S.transaction() as conn:
+        S.effacer(conn)
+        S.ajouter_evenements(conn, journal)
+        S.ajouter_evenements(conn, [{"t": etat["derniere_maj"], "type": "import",
+                                     "message": "Partie restaurée depuis un export"}])
+        S.sauvegarder(conn, etat)
+        etat, rapport = _mettre_a_jour(conn, maintenant)
+        S.sauvegarder(conn, etat)
+        journal = S.lire_journal(conn, JOURNAL_AFFICHE)
+    return _vue(etat, rapport, journal, maintenant)
 
 
 # Interface (PWA) : montée en dernier pour ne pas masquer les routes /api

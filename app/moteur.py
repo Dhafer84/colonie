@@ -329,3 +329,68 @@ def effets(batiment: str, niveau: int) -> dict:
     if batiment == "entrepot":
         resultat["stockage"] = R.STOCKAGE_PAR_ENTREPOT * niveau
     return resultat
+
+
+# --- Import ------------------------------------------------------------------
+
+def _nombre(valeur) -> bool:
+    return (isinstance(valeur, (int, float)) and not isinstance(valeur, bool)
+            and math.isfinite(valeur))
+
+
+def _entier(valeur) -> bool:
+    return isinstance(valeur, int) and not isinstance(valeur, bool)
+
+
+def valider_etat(etat) -> None:
+    """Vérifie qu'un état importé est cohérent ; lève ErreurJeu sinon."""
+    def refuser(raison: str):
+        raise ErreurJeu(f"Sauvegarde invalide : {raison}.")
+
+    if not isinstance(etat, dict):
+        refuser("l'état n'est pas un objet")
+    if etat.get("version") != 1:
+        refuser("version inconnue")
+    attendues = set(etat_initial(0))
+    if set(etat) != attendues:
+        refuser(f"champs attendus : {', '.join(sorted(attendues))}")
+    if not _nombre(etat["derniere_maj"]):
+        refuser("date de mise à jour incorrecte")
+
+    ressources = etat["ressources"]
+    if not isinstance(ressources, dict) or set(ressources) != set(R.RESSOURCES):
+        refuser("liste des ressources incorrecte")
+    if not all(_nombre(v) and v >= 0 for v in ressources.values()):
+        refuser("quantité de ressource incorrecte")
+    if not _nombre(etat["colons"]) or etat["colons"] < 0:
+        refuser("nombre de colons incorrect")
+
+    batiments = etat["batiments"]
+    if not isinstance(batiments, dict) or set(batiments) != set(R.BATIMENTS):
+        refuser("liste des bâtiments incorrecte")
+    if not all(_entier(n) and 0 <= n <= R.NIVEAU_MAX for n in batiments.values()):
+        refuser("niveau de bâtiment incorrect")
+    debloques = etat["debloques"]
+    if (not isinstance(debloques, list) or len(set(debloques)) != len(debloques)
+            or not set(debloques) <= set(R.BATIMENTS)):
+        refuser("bâtiments débloqués incorrects")
+
+    chantier = etat["chantier"]
+    if chantier is not None:
+        if not isinstance(chantier, dict) or set(chantier) != {"batiment", "niveau", "debut", "fin"}:
+            refuser("chantier incorrect")
+        if (chantier["batiment"] not in R.BATIMENTS
+                or chantier["niveau"] != batiments[chantier["batiment"]] + 1
+                or chantier["niveau"] > R.NIVEAU_MAX
+                or not (_nombre(chantier["debut"]) and _nombre(chantier["fin"]))
+                or chantier["debut"] > chantier["fin"]):
+            refuser("chantier incorrect")
+
+    if not _entier(etat["objectif"]) or not 0 <= etat["objectif"] <= len(R.OBJECTIFS):
+        refuser("objectif incorrect")
+    if not _nombre(etat["sans_penurie"]) or etat["sans_penurie"] < 0:
+        refuser("durée sans pénurie incorrecte")
+    penuries = etat["penuries"]
+    if (not isinstance(penuries, dict) or not set(penuries) <= set(LIBELLES_PENURIE)
+            or not all(_nombre(v) for v in penuries.values())):
+        refuser("pénuries incorrectes")

@@ -12,7 +12,7 @@ const ICONES_BATIMENTS = {
   panneau_solaire: "☀️", generateur_o2: "🌀", serre: "🌿", mine: "⛏️", habitat: "🏠", entrepot: "📦",
 };
 const ICONES_JOURNAL = {
-  penurie_debut: "⚠️", penurie_fin: "✅", construction: "🏗️", deblocage: "🔓", objectif: "🏆", hibernation: "💤",
+  penurie_debut: "⚠️", penurie_fin: "✅", construction: "🏗️", deblocage: "🔓", objectif: "🏆", hibernation: "💤", import: "📂",
 };
 const RAFRAICHISSEMENT = 30_000;     // ms
 const NOUVEL_ESSAI = 10_000;         // ms, après une erreur réseau
@@ -523,11 +523,51 @@ async function nouvellePartie() {
   }
 }
 
+async function exporter() {
+  try {
+    const reponse = await fetch("/api/export", { cache: "no-store" });
+    if (!reponse.ok) throw new Error(`Erreur ${reponse.status}`);
+    const disposition = reponse.headers.get("Content-Disposition") || "";
+    const nom = (disposition.match(/filename="([^"]+)"/) || [])[1] || "colonie.json";
+    const lien = el("a");
+    lien.href = URL.createObjectURL(await reponse.blob());
+    lien.download = nom;
+    document.body.append(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 10_000);
+    notifier(`💾 Partie exportée : ${nom}`);
+  } catch (erreur) {
+    notifier(`Export impossible : ${erreur.message}`, true);
+  }
+}
+
+async function importer(fichier) {
+  if (!fichier) return;
+  try {
+    let donnees;
+    try { donnees = JSON.parse(await fichier.text()); } catch { throw new Error("Ce fichier n'est pas du JSON valide."); }
+    if (!confirm("Remplacer la partie actuelle par celle du fichier ? La partie actuelle sera perdue.")) return;
+    const v = await poster("/api/import", donnees);
+    $("menu").close();
+    recevoir(v);
+    notifier("📂 Partie importée.");
+    if (v.rapport && v.rapport.duree >= SEUIL_RAPPORT) afficherRapport(v.rapport);
+  } catch (erreur) {
+    notifier(erreur.message, true);
+  } finally {
+    $("fichier-import").value = "";
+  }
+}
+
 // --- Démarrage ---------------------------------------------------------------
 
 function demarrer() {
   $("bouton-menu").addEventListener("click", () => $("menu").showModal());
   $("bouton-nouvelle").addEventListener("click", nouvellePartie);
+  $("bouton-exporter").addEventListener("click", exporter);
+  $("bouton-importer").addEventListener("click", () => $("fichier-import").click());
+  $("fichier-import").addEventListener("change", (e) => importer(e.target.files[0]));
   document.addEventListener("visibilitychange", () => { if (!document.hidden) rafraichir(); });
   window.addEventListener("online", rafraichir);
   setInterval(tic, 1000);

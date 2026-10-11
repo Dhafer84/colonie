@@ -1,5 +1,6 @@
 """Tests de l'API et de la persistance SQLite."""
 
+import json
 import sqlite3
 
 import pytest
@@ -226,3 +227,84 @@ def test_fichiers_de_la_pwa(client, chemin, type_):
 
 def test_route_api_inconnue(client):
     assert client.get("/api/inexistante").status_code == 404
+
+
+# --- Export / import ---------------------------------------------------------
+
+def test_export(client):
+    ok(client.post("/api/construire", json={"batiment": "serre"}))
+    client.t = T0 + 120
+    reponse = client.get("/api/export")
+    assert reponse.status_code == 200
+    assert "attachment" in reponse.headers["content-disposition"]
+    donnees = reponse.json()
+    assert donnees["format"] == main.FORMAT_EXPORT
+    assert donnees["etat"]["derniere_maj"] == T0 + 120
+    assert donnees["etat"]["batiments"]["serre"] == 1
+    assert [ev["type"] for ev in donnees["journal"]] == ["objectif", "construction"]
+
+
+def test_export_puis_import(client):
+    ok(client.post("/api/construire", json={"batiment": "serre"}))
+    client.t = T0 + 120
+    export = client.get("/api/export").json()
+    ok(client.post("/api/nouvelle-partie", json={"confirmer": True}))
+
+    client.t = T0 + 120 + H
+    vue = ok(client.post("/api/import", json=export))
+    assert batiment(vue, "serre")["niveau"] == 1
+    assert vue["objectif"]["numero"] == 2
+    # L'heure écoulée depuis l'export est rattrapée
+    assert vue["rapport"]["duree"] == H
+    assert [ev["type"] for ev in vue["journal"]] == ["import", "objectif", "construction"]
+
+
+def test_import_d_un_fichier_quelconque(client):
+    reponse = client.post("/api/import", json={"bonjour": 1})
+    assert reponse.status_code == 400
+    assert reponse.json()["detail"] == "Ce fichier n'est pas un export de la Colonie spatiale."
+
+
+@pytest.mark.parametrize("modifier, raison", [
+    (lambda e: e.update(version=2), "version inconnue"),
+    (lambda e: e.pop("colons"), "champs attendus"),
+    (lambda e: e["ressources"].update(oxygene=-5), "quantité de ressource incorrecte"),
+    (lambda e: e["ressources"].update(oxygene="beaucoup"), "quantité de ressource incorrecte"),
+    (lambda e: e["batiments"].update(serre=11), "niveau de bâtiment incorrect"),
+    (lambda e: e["batiments"].update(serre=1.5), "niveau de bâtiment incorrect"),
+    (lambda e: e["batiments"].pop("mine"), "liste des bâtiments incorrecte"),
+    (lambda e: e.update(debloques=["fusee"]), "bâtiments débloqués incorrects"),
+    (lambda e: e.update(chantier={"batiment": "serre", "niveau": 3, "debut": 0, "fin": 1}),
+     "chantier incorrect"),
+    (lambda e: e.update(objectif=99), "objectif incorrect"),
+    (lambda e: e.update(penuries={"materiaux": 0}), "pénuries incorrectes"),
+    (lambda e: e.update(derniere_maj=T0 + 10 * H), "datée du futur"),
+])
+def test_import_refuse_un_etat_incoherent(client, modifier, raison):
+    export = client.get("/api/export").json()
+    modifier(export["etat"])
+    reponse = client.post("/api/import", json=export)
+    assert reponse.status_code == 400
+    assert raison in reponse.json()["detail"]
+    # La partie en cours n'est pas touchée
+    assert ok(client.get("/api/etat"))["ressources"]["materiaux"] == 150
+
+
+def test_import_refuse_un_journal_incorrect(client):
+    export = client.get("/api/export").json()
+    export["journal"] = [{"t": "hier"}]
+    assert client.post("/api/import", json=export).status_code == 400
+
+
+# --- Sauvegarde de la base ---------------------------------------------------
+
+def test_sauvegarde_de_la_base(client, tmp_path):
+    from app import sauvegarde
+
+    ok(client.post("/api/construire", json={"batiment": "serre"}))
+    fichiers = [sauvegarde.sauvegarder(garder=3) for _ in range(5)]
+    restants = sorted((tmp_path / "sauvegardes").glob("*.db"))
+    assert restants == fichiers[-3:]
+    with sqlite3.connect(restants[-1]) as conn:
+        etat = json.loads(conn.execute("SELECT etat FROM partie").fetchone()[0])
+    assert etat["chantier"]["batiment"] == "serre"
