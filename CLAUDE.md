@@ -1,8 +1,10 @@
 # CLAUDE.md — Colonie spatiale
 
-Jeu de gestion « idle » mono-joueur, auto-hébergé sur le serveur maison.
+Jeu de gestion « idle » mono-joueur, auto-hébergé sur le serveur maison
+(contexte du serveur : `~/homelab/CLAUDE.md`, chargé automatiquement, hors dépôt).
+Dépôt **public** : n'y mettre aucune information personnelle ni propre au serveur
+(nom du tailnet, adresses IP, chemins personnels…).
 
-Contexte du serveur (copie de `~/homelab/CLAUDE.md`, à resynchroniser si l'original change) :
 Langue : **français** partout (interface, code, commentaires, docs, commits).
 
 ## Règles du jeu (v1)
@@ -32,7 +34,7 @@ Tous les chiffres sont dans `app/regles.py` (taux par heure, durées en secondes
 
 ## Réseau et intégrations
 - Port **8085** lié à `127.0.0.1` uniquement — **jamais sur 0.0.0.0**.
-- Accès : **Tailscale Serve** HTTPS port **8086** → `https://serveur.<tailnet>.ts.net:8086` (tailnet uniquement).
+- Accès : **Tailscale Serve** HTTPS port **8086** → `https://serveur.<tailnet>.ts.net:8086` (tailnet uniquement ; nom exact : `tailscale serve status`).
 - Homepage : tuile dans `~/homepage/config/services.yaml` (groupe « Loisirs »).
 - WUD : `wud.watch=false` (image locale, pas de registre) ; image de base mise à jour par rebuild avec `--pull`.
 

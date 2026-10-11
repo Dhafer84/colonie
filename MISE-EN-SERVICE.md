@@ -42,6 +42,8 @@ sudo tailscale serve --bg --https=8086 http://127.0.0.1:8085
 tailscale serve status                    # vérifier la règle
 ```
 
+`<tailnet>` : le nom de ton tailnet, affiché par `tailscale serve status`.
+
 Puis ouvrir `https://serveur.<tailnet>.ts.net:8086` sur le téléphone (Tailscale actif) :
 - **iPhone** (Safari) : Partager → « Sur l'écran d'accueil ».
 - **Android** (Chrome) : menu ⋮ → « Installer l'application ».
