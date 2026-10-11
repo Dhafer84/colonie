@@ -71,7 +71,7 @@ data/            colonie.db — non versionné
   - Routes : `GET /api/etat`, `POST /api/construire {batiment}`, `POST /api/nouvelle-partie {confirmer: true}` ; `/api/sante` vérifie aussi la base (503 sinon).
   - Un verrou + `BEGIN IMMEDIATE` sérialisent « charger → simuler → sauvegarder » ; une action refusée annule tout (rollback).
   - Avant le premier `up` : `mkdir -p data` (sinon Docker crée `data/` en root et l'utilisateur UID 1000 ne peut pas écrire la base).
-- [ ] Étape 4 — HTTPS via Tailscale Serve (8086) — à faire sur le serveur, commandes dans `MISE-EN-SERVICE.md`
+- [x] Étape 4 — HTTPS via Tailscale Serve (8086), règle active (« tailnet only »), certificat valide ; retrait : `sudo tailscale serve --https=8086 off`
 - [x] Étape 5 — Interface mobile + PWA (57 tests)
   - L'interface extrapole les ressources chaque seconde avec les taux/h et redemande `/api/etat` toutes les 30 s, à la fin d'un chantier, quand une ressource va s'épuiser et au retour sur l'onglet.
   - Rapport « Pendant ton absence » si plus de 10 min se sont écoulées depuis la dernière requête.
