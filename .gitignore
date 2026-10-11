@@ -1,0 +1,12 @@
+# Données de la partie (sauvegardées à part, jamais versionnées)
+data/
+sauvegardes/
+
+# Réglages locaux de Claude Code
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

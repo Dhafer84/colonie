@@ -1,0 +1,19 @@
+services:
+  colonie:
+    build: .
+    image: colonie:local
+    container_name: colonie
+    restart: unless-stopped
+    # Uniquement sur 127.0.0.1 : l'accès se fait via Tailscale Serve (HTTPS, port 8086)
+    ports:
+      - "127.0.0.1:8085:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Africa/Tunis
+    mem_limit: 128m
+    labels:
+      # Image construite localement : aucun registre à surveiller pour WUD
+      - wud.watch=false
+      - wud.display.name=Colonie spatiale
+      - wud.display.icon=mdi:rocket-launch
